@@ -5,6 +5,7 @@ import (
     "log"
     "fmt"
     "encoding/json"
+    "regexp"
 )
 
 func createSymLink(fileSrc string, folderDest string, fileDest string) {
@@ -89,6 +90,11 @@ func main() {
 
       fmt.Println("file1:", file, "=>", "tag-map:", fileDict[file])
 
+      fileExtensions  := "jpg|jpeg|png|avi|mp4"
+      rgx             := regexp.MustCompile(`[^/]+\.(`+fileExtensions+`)`)
+      fileName        := rgx.FindString(file)
+      fmt.Println("fileName: ", fileName)
+
       tag_event       := fileDict[file].(map[string]interface{})["event"].(string)
       tag_person      := fileDict[file].(map[string]interface{})["person"].(string)
       tag_ort         := fileDict[file].(map[string]interface{})["ort"].(string)
@@ -112,23 +118,25 @@ func main() {
       fmt.Println("===>", "zeit/minute:", tag_zeit_minute)
       fmt.Println("===>", "zeit/sekunde:", tag_zeit_sekunde)
 
-      zeitPrefix  := tag_zeit_stunde+"."+tag_zeit_minute+"."+tag_zeit_sekunde+"_-_"
+//       datumPrefix := tag_datum_jahr+tag_datum_monat+tag_datum_tag+"_-_"
+      datumPrefix := tag_datum_jahr+tag_datum_monat+tag_datum_tag+"-"
+      zeitPrefix  := tag_zeit_stunde+tag_zeit_minute+tag_zeit_sekunde+"_-_"
 
       //// Datum Top Level
       fileLinkFolder := fileDestPrefix+"/datum/"+tag_datum_jahr+"/"+tag_datum_monat+"/"+tag_datum_tag+"/"
-      createSymLink(file, fileLinkFolder, zeitPrefix+"baustelle-2022.jpg")
+      createSymLink(file, fileLinkFolder, datumPrefix+zeitPrefix+fileName)
 
       //// Event Top Level
       fileLinkFolder = fileDestPrefix+"/"+"event/"+tag_event+"/"
-      createSymLink(file, fileLinkFolder, zeitPrefix+"baustelle-2022.jpg")
+      createSymLink(file, fileLinkFolder, datumPrefix+zeitPrefix+fileName)
 
       //// Ort Top Level
       fileLinkFolder = fileDestPrefix+"/"+"ort/"+tag_ort+"/"
-      createSymLink(file, fileLinkFolder, zeitPrefix+"baustelle-2022.jpg")
+      createSymLink(file, fileLinkFolder, datumPrefix+zeitPrefix+fileName)
 
       //// Person Top Level
       fileLinkFolder = fileDestPrefix+"/"+"person/"+tag_person+"/"
-      createSymLink(file, fileLinkFolder, zeitPrefix+"baustelle-2022.jpg")
+      createSymLink(file, fileLinkFolder, datumPrefix+zeitPrefix+fileName)
       /////////////////////
 
     }
