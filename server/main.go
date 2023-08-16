@@ -23,6 +23,14 @@ func createSymLink(fileSrc string, folderDest string, fileDest string) {
   }
 }
 
+func getFileName(file string) string {
+  fileExtensions  := "jpg|jpeg|png|avi|mp4"
+  rgx             := regexp.MustCompile(`[^/]+\.(`+fileExtensions+`)`)
+  fileName        := rgx.FindString(file)
+  fmt.Println("fileName: ", fileName)
+
+  return fileName
+}
 
 func main() {
 
@@ -90,10 +98,8 @@ func main() {
 
       fmt.Println("file1:", file, "=>", "tag-map:", fileDict[file])
 
-      fileExtensions  := "jpg|jpeg|png|avi|mp4"
-      rgx             := regexp.MustCompile(`[^/]+\.(`+fileExtensions+`)`)
-      fileName        := rgx.FindString(file)
-      fmt.Println("fileName: ", fileName)
+      fileName := getFileName(file)
+
 
       tag_event       := fileDict[file].(map[string]interface{})["event"].(string)
       tag_person      := fileDict[file].(map[string]interface{})["person"].(string)
