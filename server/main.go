@@ -143,7 +143,7 @@ func main() {
                     },
                     "event":  "geburtstagsfeier",
                     "place":  "frankfurt",
-                    "person": "freunde"
+                    "person": "claudi maier"
                   },
                   "/tmp/test/src/geburtstagsfeier-sdf4wfasa.jpg": {
                     "date":  {
@@ -158,7 +158,7 @@ func main() {
                     },
                     "event":  "geburtstagsfeier",
                     "place":  "berlin",
-                    "person": "freunde"
+                    "person": "martin schuster"
                   },
                   "/tmp/test/src/geburtstagsfeier-d8zz9ad.jpg": {
                     "date":  {
@@ -173,7 +173,7 @@ func main() {
                     },
                     "event":  "geburtstagsfeier",
                     "place":  "linz",
-                    "person": "familie"
+                    "person": "max mustermann"
                   }
                 }`
 
@@ -260,54 +260,69 @@ func main() {
         fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
 
         //////////  what/when
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
         //////////  what/who
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+        /////       what/who/when
+        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
         //////////  what/where
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+        /////       what/where/when
+        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
         /////////////////////////////////////
 
         ///////////////////////////////////// where
         fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
 
         //////////  where/when
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
         //////////  where/what
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+        /////       where/what/when
+        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
         //////////  where/who
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+        /////       where/who/when
+        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
         /////////////////////////////////////
 
         ///////////////////////////////////// who
         fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
 
         //////////  who/when
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
         //////////  who/what
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+        /////       who/what/when
+        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
         //////////  who/where
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
         fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+        /////       who/where/when
+        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
         /////////////////////////////////////
 
       }
