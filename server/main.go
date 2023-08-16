@@ -6,6 +6,7 @@ import (
     "fmt"
     "encoding/json"
     "regexp"
+    "io/ioutil"
 )
 func exists(path string) bool {
   if _, err := os.Stat(path); err == nil {
@@ -33,7 +34,6 @@ func createSymLinks(fileSrc string, folderDests []string, fileDest string) {
       if err != nil {
           log.Fatal(err)
       }
-
     }
 
   }
@@ -79,255 +79,180 @@ func getTimeTags(fileDict interface{}) map[string]string {
   return timeTags
 }
 
+func getTagMap() map[string]interface{} {
+
+  tagMapFile  := "tag_map.json"
+
+  jsonFile, err := os.Open(tagMapFile)
+  if err != nil {
+    fmt.Println(err)
+  }
+  fmt.Println("[DEBUG] Successfully opened "+tagMapFile)
+  defer jsonFile.Close()
+
+  jsonStr, _ := ioutil.ReadAll(jsonFile)
+
+  tagMap  := map[string]interface{}{}
+  err = json.Unmarshal([]byte(jsonStr), &tagMap)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  fmt.Println(tagMap)
+
+  return tagMap
+}
+
+
 func main() {
 
-    fileDestPrefix := "/tmp/test/dst"
-    fmt.Printf("fileDestPrefix: %s\n", fileDestPrefix)
+  fileDestPrefix  := "/tmp/test/dst"
+  fmt.Printf("fileDestPrefix: %s\n", fileDestPrefix)
 
-    jsonStr := `{
-                  "/tmp/test/src/baustelle-asd.jpg": {
-                    "date":  {
-                      "year":   "2023",
-                      "month":  "10",
-                      "day":    "02"
-                    },
-                    "time": {
-                      "hour":   "15",
-                      "minute": "10",
-                      "second": "01"
-                    },
-                    "event":  "baustelle",
-                    "place":  "frankfurt",
-                    "person": "familie"
-                  },
-                  "/tmp/test/src/baustelle-dgfh.jpg": {
-                    "date":  {
-                      "year":   "2023",
-                      "month":  "10",
-                      "day":    "02"
-                    },
-                    "time": {
-                      "hour":   "15",
-                      "minute": "11",
-                      "second": "01"
-                    },
-                    "event":  "baustelle",
-                    "place":  "frankfurt",
-                    "person": "familie"
-                  },
-                  "/tmp/test/src/baustelle-tzuzti.jpg": {
-                    "date":  {
-                      "year":   "2023",
-                      "month":  "09",
-                      "day":    "02"
-                    },
-                    "time": {
-                      "hour":   "15",
-                      "minute": "12",
-                      "second": "01"
-                    },
-                    "event":  "baustelle",
-                    "place":  "frankfurt",
-                    "person": "familie"
-                  },
-                  "/tmp/test/src/geburtstagsfeier-asd454asa.jpg": {
-                    "date":  {
-                      "year":   "2023",
-                      "month":  "09",
-                      "day":    "02"
-                    },
-                    "time": {
-                      "hour":   "16",
-                      "minute": "10",
-                      "second": "01"
-                    },
-                    "event":  "geburtstagsfeier",
-                    "place":  "frankfurt",
-                    "person": "claudi maier"
-                  },
-                  "/tmp/test/src/geburtstagsfeier-sdf4wfasa.jpg": {
-                    "date":  {
-                      "year":   "2023",
-                      "month":  "07",
-                      "day":    "03"
-                    },
-                    "time": {
-                      "hour":   "23",
-                      "minute": "09",
-                      "second": "01"
-                    },
-                    "event":  "geburtstagsfeier",
-                    "place":  "berlin",
-                    "person": "martin schuster"
-                  },
-                  "/tmp/test/src/geburtstagsfeier-d8zz9ad.jpg": {
-                    "date":  {
-                      "year":   "2023",
-                      "month":  "04",
-                      "day":    "01"
-                    },
-                    "time": {
-                      "hour":   "22",
-                      "minute": "07",
-                      "second": "01"
-                    },
-                    "event":  "geburtstagsfeier",
-                    "place":  "linz",
-                    "person": "max mustermann"
-                  }
-                }`
+  tagMap := getTagMap()
 
-    fileDict := map[string]interface{}{}
-    err := json.Unmarshal([]byte(jsonStr), &fileDict)
-    if err != nil {
-        log.Fatal(err)
-    }
+  for file := range tagMap {
 
-    fmt.Println(fileDict)
+    fmt.Println("file:", file, "=>", "tag-map:", tagMap[file])
+
+    fileName := getFileName(file)
+
+    dateTags := getDateTags(tagMap[file])
+    timeTags := getTimeTags(tagMap[file])
 
 
-    for file := range fileDict {
+    tag_event   := tagMap[file].(map[string]interface{})["event"].(string)
+    tag_person  := tagMap[file].(map[string]interface{})["person"].(string)
+    tag_place   := tagMap[file].(map[string]interface{})["place"].(string)
 
-      fmt.Println("file:", file, "=>", "tag-map:", fileDict[file])
-
-      fileName := getFileName(file)
-
-      dateTags := getDateTags(fileDict[file])
-      timeTags := getTimeTags(fileDict[file])
-
-
-      tag_event   := fileDict[file].(map[string]interface{})["event"].(string)
-      tag_person  := fileDict[file].(map[string]interface{})["person"].(string)
-      tag_place   := fileDict[file].(map[string]interface{})["place"].(string)
-
-      fmt.Println("===>", "event:", tag_event)
-      fmt.Println("===>", "person:", tag_person)
-      fmt.Println("===>", "place:", tag_place)
+    fmt.Println("===>", "event:", tag_event)
+    fmt.Println("===>", "person:", tag_person)
+    fmt.Println("===>", "place:", tag_place)
 
 
-      datePrefix  := dateTags["year"]+dateTags["month"]+dateTags["day"]+"-"
-      timePrefix  := timeTags["hour"]+timeTags["minute"]+timeTags["second"]+"_-_"
+    datePrefix  := dateTags["year"]+dateTags["month"]+dateTags["day"]+"-"
+    timePrefix  := timeTags["hour"]+timeTags["minute"]+timeTags["second"]+"_-_"
 
-      specialFolderPrefix := "0000-#-"
+    specialFolderPrefix := "0000-#-"
 
-      fileLinkFolders := []string {
-        ///////////////////////////////////// when
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+    fileLinkFolders := []string {
+      ///////////////////////////////////// when
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
 
-        //////////  when/what
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
-        /////       when/what/where
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
-        /////       when/what/who
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+      //////////  when/what
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+      /////       when/what/where
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+      /////       when/what/who
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
 
-        //////////  when/where
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
-        /////       when/where/what
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
-        /////       when/where/who
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+      //////////  when/where
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+      /////       when/where/what
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+      /////       when/where/who
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
 
-        //////////  when/who
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
-        /////       when/who/what
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
-        /////       when/who/where
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
-        fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
-        /////////////////////////////////////
+      //////////  when/who
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+      /////       when/who/what
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+      /////       when/who/where
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+      fileDestPrefix+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+      /////////////////////////////////////
 
-        ///////////////////////////////////// what
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+      ///////////////////////////////////// what
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
 
-        //////////  what/when
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      //////////  what/when
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
-        //////////  what/who
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
-        /////       what/who/when
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      //////////  what/who
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+      /////       what/who/when
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
-        //////////  what/where
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
-        /////       what/where/when
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
-        /////////////////////////////////////
+      //////////  what/where
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+      /////       what/where/when
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      /////////////////////////////////////
 
-        ///////////////////////////////////// where
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+      ///////////////////////////////////// where
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
 
-        //////////  where/when
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      //////////  where/when
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
-        //////////  where/what
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
-        /////       where/what/when
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      //////////  where/what
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+      /////       where/what/when
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
-        //////////  where/who
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
-        /////       where/who/when
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
-        /////////////////////////////////////
+      //////////  where/who
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+      /////       where/who/when
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      /////////////////////////////////////
 
-        ///////////////////////////////////// who
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+      ///////////////////////////////////// who
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
 
-        //////////  who/when
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      //////////  who/when
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
-        //////////  who/what
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
-        /////       who/what/when
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      //////////  who/what
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+      /////       who/what/when
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
 
-        //////////  who/where
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
-        /////       who/where/when
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
-        fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
-        /////////////////////////////////////
-
-      }
-
-      createSymLinks(file, fileLinkFolders, datePrefix+timePrefix+fileName)
+      //////////  who/where
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+      /////       who/where/when
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+      fileDestPrefix+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+      /////////////////////////////////////
 
     }
+
+    createSymLinks(file, fileLinkFolders, datePrefix+timePrefix+fileName)
+
+  }
 }
