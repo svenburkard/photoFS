@@ -7,6 +7,14 @@ import (
     "encoding/json"
     "regexp"
 )
+func exists(path string) bool {
+  if _, err := os.Stat(path); err == nil {
+    // exist
+    return true
+  }
+  // not exist
+  return false
+}
 
 func createSymLink(fileSrc string, folderDest string, fileDest string) {
 
@@ -17,9 +25,13 @@ func createSymLink(fileSrc string, folderDest string, fileDest string) {
 
   fileLink := folderDest+fileDest
 
-  err = os.Symlink(fileSrc, fileLink)
-  if err != nil {
-      log.Fatal(err)
+  if exists(fileLink) == false {
+    fmt.Println("[INFO] symlink needs to be created: "+fileLink)
+    err = os.Symlink(fileSrc, fileLink)
+    if err != nil {
+        log.Fatal(err)
+    }
+
   }
 }
 
@@ -32,6 +44,36 @@ func getFileName(file string) string {
   return fileName
 }
 
+func getDateTags(fileDict interface{}) map[string]string {
+
+  dateTags := make(map[string]string)
+
+  dateTags["year"]  = fileDict.(map[string]interface{})["date"].(map[string]interface{})["year"].(string)
+  dateTags["month"] = fileDict.(map[string]interface{})["date"].(map[string]interface{})["month"].(string)
+  dateTags["day"]   = fileDict.(map[string]interface{})["date"].(map[string]interface{})["day"].(string)
+
+  fmt.Println("===>", "date/year:",   dateTags["year"])
+  fmt.Println("===>", "date/month:",  dateTags["month"])
+  fmt.Println("===>", "date/day:",    dateTags["day"])
+
+  return dateTags
+}
+
+func getTimeTags(fileDict interface{}) map[string]string {
+
+  timeTags := make(map[string]string)
+
+  timeTags["hour"]    = fileDict.(map[string]interface{})["time"].(map[string]interface{})["hour"].(string)
+  timeTags["minute"]  = fileDict.(map[string]interface{})["time"].(map[string]interface{})["minute"].(string)
+  timeTags["second"]  = fileDict.(map[string]interface{})["time"].(map[string]interface{})["second"].(string)
+
+  fmt.Println("===>", "time/hour:",   timeTags["hour"])
+  fmt.Println("===>", "time/minute:", timeTags["minute"])
+  fmt.Println("===>", "time/second:", timeTags["second"])
+
+  return timeTags
+}
+
 func main() {
 
     fileDestPrefix := "/tmp/test/dst"
@@ -39,48 +81,48 @@ func main() {
 
     jsonStr := `{
                   "/tmp/test/src/baustelle-asd.jpg": {
-                    "datum":  {
-                      "jahr": "2023",
-                      "monat": "10",
-                      "tag": "02"
+                    "date":  {
+                      "year":   "2023",
+                      "month":  "10",
+                      "day":    "02"
                     },
-                    "zeit": {
-                      "stunde":   "15",
-                      "minute":   "10",
-                      "sekunde":  "01"
+                    "time": {
+                      "hour":   "15",
+                      "minute": "10",
+                      "second": "01"
                     },
                     "event":  "baustelle",
-                    "ort":    "estenfeld",
+                    "place":  "estenfeld",
                     "person": "familie"
                   },
                   "/tmp/test/src/baustelle-dgfh.jpg": {
-                    "datum":  {
-                      "jahr": "2023",
-                      "monat": "10",
-                      "tag": "02"
+                    "date":  {
+                      "year":   "2023",
+                      "month":  "10",
+                      "day":    "02"
                     },
-                    "zeit": {
-                      "stunde":   "15",
-                      "minute":   "11",
-                      "sekunde":  "01"
+                    "time": {
+                      "hour":   "15",
+                      "minute": "11",
+                      "second": "01"
                     },
                     "event":  "baustelle",
-                    "ort":    "estenfeld",
+                    "place":  "estenfeld",
                     "person": "familie"
                   },
                   "/tmp/test/src/baustelle-tzuzti.jpg": {
-                    "datum":  {
-                      "jahr": "2023",
-                      "monat": "09",
-                      "tag": "02"
+                    "date":  {
+                      "year":   "2023",
+                      "month":  "09",
+                      "day":    "02"
                     },
-                    "zeit": {
-                      "stunde":   "15",
-                      "minute":   "12",
-                      "sekunde":  "01"
+                    "time": {
+                      "hour":   "15",
+                      "minute": "12",
+                      "second": "01"
                     },
                     "event":  "baustelle",
-                    "ort":    "estenfeld",
+                    "place":  "estenfeld",
                     "person": "familie"
                   }
                 }`
@@ -96,53 +138,41 @@ func main() {
 
     for file := range fileDict {
 
-      fmt.Println("file1:", file, "=>", "tag-map:", fileDict[file])
+      fmt.Println("file:", file, "=>", "tag-map:", fileDict[file])
 
       fileName := getFileName(file)
+
+      dateTags := getDateTags(fileDict[file])
+      timeTags := getTimeTags(fileDict[file])
 
 
       tag_event       := fileDict[file].(map[string]interface{})["event"].(string)
       tag_person      := fileDict[file].(map[string]interface{})["person"].(string)
-      tag_ort         := fileDict[file].(map[string]interface{})["ort"].(string)
-      tag_datum_jahr  := fileDict[file].(map[string]interface{})["datum"].(map[string]interface{})["jahr"].(string)
-      tag_datum_monat := fileDict[file].(map[string]interface{})["datum"].(map[string]interface{})["monat"].(string)
-      tag_datum_tag   := fileDict[file].(map[string]interface{})["datum"].(map[string]interface{})["tag"].(string)
-
-      tag_zeit_stunde  := fileDict[file].(map[string]interface{})["zeit"].(map[string]interface{})["stunde"].(string)
-      tag_zeit_minute  := fileDict[file].(map[string]interface{})["zeit"].(map[string]interface{})["minute"].(string)
-      tag_zeit_sekunde := fileDict[file].(map[string]interface{})["zeit"].(map[string]interface{})["sekunde"].(string)
+      tag_place         := fileDict[file].(map[string]interface{})["place"].(string)
 
       fmt.Println("===>", "event:", tag_event)
       fmt.Println("===>", "person:", tag_person)
-      fmt.Println("===>", "ort:", tag_ort)
+      fmt.Println("===>", "place:", tag_place)
 
-      fmt.Println("===>", "datum/jahr:", tag_datum_jahr)
-      fmt.Println("===>", "datum/monat:", tag_datum_monat)
-      fmt.Println("===>", "datum/tag:", tag_datum_tag)
 
-      fmt.Println("===>", "zeit/stunde:", tag_zeit_stunde)
-      fmt.Println("===>", "zeit/minute:", tag_zeit_minute)
-      fmt.Println("===>", "zeit/sekunde:", tag_zeit_sekunde)
+      datePrefix  := dateTags["year"]+dateTags["month"]+dateTags["day"]+"-"
+      timePrefix  := timeTags["hour"]+timeTags["minute"]+timeTags["second"]+"_-_"
 
-//       datumPrefix := tag_datum_jahr+tag_datum_monat+tag_datum_tag+"_-_"
-      datumPrefix := tag_datum_jahr+tag_datum_monat+tag_datum_tag+"-"
-      zeitPrefix  := tag_zeit_stunde+tag_zeit_minute+tag_zeit_sekunde+"_-_"
+      //// date Top Level
+      fileLinkFolder := fileDestPrefix+"/date/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"
+      createSymLink(file, fileLinkFolder, datePrefix+timePrefix+fileName)
 
-      //// Datum Top Level
-      fileLinkFolder := fileDestPrefix+"/datum/"+tag_datum_jahr+"/"+tag_datum_monat+"/"+tag_datum_tag+"/"
-      createSymLink(file, fileLinkFolder, datumPrefix+zeitPrefix+fileName)
-
-      //// Event Top Level
+      //// event Top Level
       fileLinkFolder = fileDestPrefix+"/"+"event/"+tag_event+"/"
-      createSymLink(file, fileLinkFolder, datumPrefix+zeitPrefix+fileName)
+      createSymLink(file, fileLinkFolder, datePrefix+timePrefix+fileName)
 
-      //// Ort Top Level
-      fileLinkFolder = fileDestPrefix+"/"+"ort/"+tag_ort+"/"
-      createSymLink(file, fileLinkFolder, datumPrefix+zeitPrefix+fileName)
+      //// place Top Level
+      fileLinkFolder = fileDestPrefix+"/"+"place/"+tag_place+"/"
+      createSymLink(file, fileLinkFolder, datePrefix+timePrefix+fileName)
 
-      //// Person Top Level
+      //// person Top Level
       fileLinkFolder = fileDestPrefix+"/"+"person/"+tag_person+"/"
-      createSymLink(file, fileLinkFolder, datumPrefix+zeitPrefix+fileName)
+      createSymLink(file, fileLinkFolder, datePrefix+timePrefix+fileName)
       /////////////////////
 
     }
