@@ -16,23 +16,28 @@ func exists(path string) bool {
   return false
 }
 
-func createSymLink(fileSrc string, folderDest string, fileDest string) {
+func createSymLinks(fileSrc string, folderDests []string, fileDest string) {
 
-  err := os.MkdirAll(folderDest, os.ModePerm)
-  if err != nil {
-    log.Println(err)
-  }
+  for i := range folderDests {
 
-  fileLink := folderDest+fileDest
-
-  if exists(fileLink) == false {
-    fmt.Println("[INFO] symlink needs to be created: "+fileLink)
-    err = os.Symlink(fileSrc, fileLink)
+    err := os.MkdirAll(folderDests[i], os.ModePerm)
     if err != nil {
-        log.Fatal(err)
+      log.Println(err)
+    }
+
+    fileLink := folderDests[i]+fileDest
+
+    if exists(fileLink) == false {
+      fmt.Println("[INFO] symlink needs to be created: "+fileLink)
+      err = os.Symlink(fileSrc, fileLink)
+      if err != nil {
+          log.Fatal(err)
+      }
+
     }
 
   }
+
 }
 
 func getFileName(file string) string {
@@ -92,7 +97,7 @@ func main() {
                       "second": "01"
                     },
                     "event":  "baustelle",
-                    "place":  "estenfeld",
+                    "place":  "frankfurt",
                     "person": "familie"
                   },
                   "/tmp/test/src/baustelle-dgfh.jpg": {
@@ -107,7 +112,7 @@ func main() {
                       "second": "01"
                     },
                     "event":  "baustelle",
-                    "place":  "estenfeld",
+                    "place":  "frankfurt",
                     "person": "familie"
                   },
                   "/tmp/test/src/baustelle-tzuzti.jpg": {
@@ -122,7 +127,52 @@ func main() {
                       "second": "01"
                     },
                     "event":  "baustelle",
-                    "place":  "estenfeld",
+                    "place":  "frankfurt",
+                    "person": "familie"
+                  },
+                  "/tmp/test/src/geburtstagsfeier-asd454asa.jpg": {
+                    "date":  {
+                      "year":   "2023",
+                      "month":  "09",
+                      "day":    "02"
+                    },
+                    "time": {
+                      "hour":   "16",
+                      "minute": "10",
+                      "second": "01"
+                    },
+                    "event":  "geburtstagsfeier",
+                    "place":  "frankfurt",
+                    "person": "freunde"
+                  },
+                  "/tmp/test/src/geburtstagsfeier-sdf4wfasa.jpg": {
+                    "date":  {
+                      "year":   "2023",
+                      "month":  "07",
+                      "day":    "03"
+                    },
+                    "time": {
+                      "hour":   "23",
+                      "minute": "09",
+                      "second": "01"
+                    },
+                    "event":  "geburtstagsfeier",
+                    "place":  "berlin",
+                    "person": "freunde"
+                  },
+                  "/tmp/test/src/geburtstagsfeier-d8zz9ad.jpg": {
+                    "date":  {
+                      "year":   "2023",
+                      "month":  "04",
+                      "day":    "01"
+                    },
+                    "time": {
+                      "hour":   "22",
+                      "minute": "07",
+                      "second": "01"
+                    },
+                    "event":  "geburtstagsfeier",
+                    "place":  "linz",
                     "person": "familie"
                   }
                 }`
@@ -146,9 +196,9 @@ func main() {
       timeTags := getTimeTags(fileDict[file])
 
 
-      tag_event       := fileDict[file].(map[string]interface{})["event"].(string)
-      tag_person      := fileDict[file].(map[string]interface{})["person"].(string)
-      tag_place         := fileDict[file].(map[string]interface{})["place"].(string)
+      tag_event   := fileDict[file].(map[string]interface{})["event"].(string)
+      tag_person  := fileDict[file].(map[string]interface{})["person"].(string)
+      tag_place   := fileDict[file].(map[string]interface{})["place"].(string)
 
       fmt.Println("===>", "event:", tag_event)
       fmt.Println("===>", "person:", tag_person)
@@ -158,22 +208,111 @@ func main() {
       datePrefix  := dateTags["year"]+dateTags["month"]+dateTags["day"]+"-"
       timePrefix  := timeTags["hour"]+timeTags["minute"]+timeTags["second"]+"_-_"
 
-      //// date Top Level
-      fileLinkFolder := fileDestPrefix+"/date/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"
-      createSymLink(file, fileLinkFolder, datePrefix+timePrefix+fileName)
+      specialFolderPrefix := "0000-#-"
 
-      //// event Top Level
-      fileLinkFolder = fileDestPrefix+"/"+"event/"+tag_event+"/"
-      createSymLink(file, fileLinkFolder, datePrefix+timePrefix+fileName)
+      fileLinkFolders := []string {
+        ///////////////////////////////////// when
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
 
-      //// place Top Level
-      fileLinkFolder = fileDestPrefix+"/"+"place/"+tag_place+"/"
-      createSymLink(file, fileLinkFolder, datePrefix+timePrefix+fileName)
+        //////////  when/what
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/",
+        /////       when/what/where
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+        /////       when/what/who
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/",
 
-      //// person Top Level
-      fileLinkFolder = fileDestPrefix+"/"+"person/"+tag_person+"/"
-      createSymLink(file, fileLinkFolder, datePrefix+timePrefix+fileName)
-      /////////////////////
+        //////////  when/where
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/",
+        /////       when/where/what
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+        /////       when/where/wwho
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+
+        //////////  when/who
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/",
+        /////       when/who/what
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/",
+        /////       when/who/where
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+        fileDestPrefix+"/when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/",
+        /////////////////////////////////////
+
+        ///////////////////////////////////// what
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"all/",
+
+        //////////  what/when
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+
+        //////////  what/who
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+
+        //////////  what/where
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/what/"+tag_event+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+        /////////////////////////////////////
+
+        ///////////////////////////////////// where
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"all/",
+
+        //////////  where/when
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+
+        //////////  where/what
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+
+        //////////  where/who
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/where/"+tag_place+"/"+specialFolderPrefix+"who/"+tag_person+"/"+specialFolderPrefix+"all/",
+        /////////////////////////////////////
+
+        ///////////////////////////////////// who
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"all/",
+
+        //////////  who/when
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"when/"+dateTags["year"]+"/"+dateTags["month"]+"/"+dateTags["day"]+"/",
+
+        //////////  who/what
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"what/"+tag_event+"/"+specialFolderPrefix+"all/",
+
+        //////////  who/where
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"all/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+        fileDestPrefix+"/who/"+tag_person+"/"+specialFolderPrefix+"where/"+tag_place+"/"+specialFolderPrefix+"all/",
+        /////////////////////////////////////
+
+      }
+
+      createSymLinks(file, fileLinkFolders, datePrefix+timePrefix+fileName)
 
     }
 }
