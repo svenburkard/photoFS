@@ -1,0 +1,92 @@
+{
+  "/tmp/test/src/summer-party-asd.jpg": {
+    "date":  {
+      "year":   "2023",
+      "month":  "10",
+      "day":    "02"
+    },
+    "time": {
+      "hour":   "15",
+      "minute": "10",
+      "second": "01"
+    },
+    "event":  "summer-party",
+    "place":  "frankfurt",
+    "person": "family"
+  },
+  "/tmp/test/src/summer-party-dgfh.jpg": {
+    "date":  {
+      "year":   "2023",
+      "month":  "10",
+      "day":    "02"
+    },
+    "time": {
+      "hour":   "15",
+      "minute": "11",
+      "second": "01"
+    },
+    "event":  "summer-party",
+    "place":  "frankfurt",
+    "person": "family"
+  },
+  "/tmp/test/src/summer-party-tzuzti.jpg": {
+    "date":  {
+      "year":   "2023",
+      "month":  "09",
+      "day":    "02"
+    },
+    "time": {
+      "hour":   "15",
+      "minute": "12",
+      "second": "01"
+    },
+    "event":  "summer-party",
+    "place":  "frankfurt",
+    "person": "family"
+  },
+  "/tmp/test/src/birthday-party-asd454asa.jpg": {
+    "date":  {
+      "year":   "2023",
+      "month":  "09",
+      "day":    "02"
+    },
+    "time": {
+      "hour":   "16",
+      "minute": "10",
+      "second": "01"
+    },
+    "event":  "birthday-party",
+    "place":  "frankfurt",
+    "person": "claudia maier"
+  },
+  "/tmp/test/src/birthday-party-sdf4wfasa.jpg": {
+    "date":  {
+      "year":   "2023",
+      "month":  "07",
+      "day":    "03"
+    },
+    "time": {
+      "hour":   "23",
+      "minute": "09",
+      "second": "01"
+    },
+    "event":  "birthday-party",
+    "place":  "berlin",
+    "person": "martin schuster"
+  },
+  "/tmp/test/src/birthday-party-d8zz9ad.jpg": {
+    "date":  {
+      "year":   "2023",
+      "month":  "04",
+      "day":    "01"
+    },
+    "time": {
+      "hour":   "22",
+      "minute": "07",
+      "second": "01"
+    },
+    "event":  "birthday-party",
+    "place":  "linz",
+    "person": "max mustermann"
+  }
+}

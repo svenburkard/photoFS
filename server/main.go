@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 )
 
@@ -82,7 +83,14 @@ func getTimeTags(fileDict interface{}) map[string]string {
 
 func getTagMap() map[string]interface{} {
 
-	tagMapFile := "tag_map.json"
+	binary, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	binaryPath := filepath.Dir(binary)
+	fmt.Println(binaryPath)
+
+	tagMapFile := binaryPath + "/../server/tag_map.json"
 
 	jsonFile, err := os.Open(tagMapFile)
 	if err != nil {
