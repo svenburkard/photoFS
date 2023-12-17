@@ -41,10 +41,16 @@ build_server:
 	cd server && go build -o ../bin/
 
 
+test_data:
+	@echo "[INFO] create test data files from server/tag_map.json"
+	mkdir -p /tmp/test/src/ \
+		&& cat server/tag_map.json  | jq "keys" | grep '^\s*"' | cut -d '"' -f2 | xargs touch
+
+
 run_client:
 	@echo "[INFO] running photoFS client binary"
 	bin/photofs_client
 
-run_server:
+run_server: test_data
 	@echo "[INFO] running photoFS server binary"
 	bin/photofs_server
