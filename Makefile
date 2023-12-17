@@ -9,6 +9,7 @@ init: init_client init_server
 fmt: fmt_client fmt_server
 build: build_client build_server
 all: init fmt build
+run: run_server run_client
 
 
 init_client:
@@ -41,9 +42,9 @@ build_server:
 
 
 run_client:
-	@echo "[INFO] running photoFS client on-demand"
-	cd client && go run .
+	@echo "[INFO] running photoFS client binary"
+	bin/photofs_client
 
 run_server:
-	@echo "[INFO] running photoFS server on-demand"
-	cd server && go run .
+	@echo "[INFO] running photoFS server binary"
+	bin/photofs_server
