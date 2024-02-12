@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"fyne.io/fyne/v2"
@@ -9,7 +10,28 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+
+	photofs "photofs/lib"
 )
+
+func getTagWidgets(tagNames map[string][]string) (map[string]fyne.CanvasObject, map[string][]string, error) {
+	tagWidgets := make(map[string]fyne.CanvasObject)
+	selectedTags := make(map[string][]string)
+
+	for tagType, tagNameList := range tagNames {
+		localTagType := tagType // Create a local copy of tagType
+		tagWidgets[localTagType] = widget.NewCheckGroup(tagNameList, func(selected []string) {
+			selectedTags[localTagType] = selected
+			fmt.Printf("selectedTags map: %v\n", selectedTags)
+		})
+	}
+
+	if len(tagWidgets) == 0 {
+		return nil, nil, fmt.Errorf("failed to build map of tagWidgets in getTagWidgets func")
+	}
+
+	return tagWidgets, selectedTags, nil
+}
 
 func main() {
 	args := os.Args
@@ -22,6 +44,19 @@ func main() {
 			fmt.Println(arg)
 			files = append(files, arg)
 		}
+	}
+
+	// db: init
+	db, err := photofs.InitDB()
+	if err != nil {
+		fmt.Errorf("[ERROR] failed to initialize DB: %v", err)
+	}
+	defer db.Close()
+
+	// db: add some test tag names
+	err = photofs.AddTestTagNames(db)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	fileList := widget.NewList(
@@ -41,24 +76,27 @@ func main() {
 
 	//     w.Resize(fyne.NewSize(1280, 1280))
 	w.Resize(fyne.NewSize(1280, 600))
+	// 	w.Resize(fyne.NewSize(1280, 800))
 	w.CenterOnScreen()
 
-	tagsList := []string{
-		"party/birthday/smith/steven",
-		"party/birthday/smith/julia",
-		"party/christmas/company",
+	// db: get tagNames
+	fmt.Println("[client] Get tagNames:")
+	tagNames, err := photofs.GetTagNames(db)
+	if err != nil {
+		log.Fatal(err)
 	}
+	fmt.Println("[client] tagNames: ", tagNames)
 
-	tags := widget.NewCheckGroup(tagsList, func(selectedTags []string) {
-		fmt.Println("tags check_group:")
-		fmt.Println("  selected tags: ", selectedTags)
-	})
+	tagWidgets, selectedTags, err := getTagWidgets(tagNames)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	newtagNameTxt := widget.NewEntry()
 	newtagNameTxt.PlaceHolder = "New Tag..."
 
 	addBtn := widget.NewButton("Add", func() {
-		tags.Append(newtagNameTxt.Text)
+		//     tags.Append(newtagNameTxt.Text) // TODO: needs to be changed to the new tagWidgets map
 		newtagNameTxt.Text = ""
 	})
 	addBtn.Disable()
@@ -70,6 +108,14 @@ func main() {
 			addBtn.Enable()
 		}
 	}
+
+	updateBtn := widget.NewButton("Update Tags", func() {
+		if len(selectedTags) > 0 {
+			fmt.Println("[client] TODO: make DB update of selectedTags: ", selectedTags)
+		} else {
+			fmt.Println("[client] DB will not be updated, because selectedTags map is empty")
+		}
+	})
 
 	w.SetContent(
 		container.NewBorder(
@@ -143,14 +189,17 @@ func main() {
 					layout.NewGridLayout(1),
 					container.New(
 						layout.NewGridLayout(4),
-						tags,
-						widget.NewLabel("placeholder"),
-						widget.NewLabel("placeholder"),
-						widget.NewLabel("placeholder"),
+						container.NewScroll(tagWidgets["What"]),
+						// 						tagWidgets["Who"],
+						container.NewScroll(widget.NewLabel("placeholder")), // who
+						container.NewScroll(tagWidgets["Where"]),
+						container.NewScroll(widget.NewLabel("placeholder")), // misc
 					),
 					container.NewBorder(
 						// TOP
-						nil,
+						// 						widget.NewLabel("Update Tags"), // TOP
+						updateBtn,
+						// 						nil,
 						nil, // BOTTOM
 						nil, // RIGHT
 						nil, // LEFT

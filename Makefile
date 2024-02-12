@@ -5,12 +5,17 @@ info:
 	@echo  :: Avaiable make targets : $(shell grep -P "^[a-zA-Z0-9_]+:" Makefile | grep -Po "^[a-zA-Z0-9_]+")
 	@echo ""
 
-init: init_client init_server
-fmt: fmt_client fmt_server
+init: init_lib init_client init_server
+fmt: fmt_lib fmt_client fmt_server
 build: build_client build_server
 all: init fmt build
 run: run_server run_client
 
+
+init_lib:
+	@echo "[INFO] initializing photoFS lib Golang project"
+	cd lib && if [ ! -f go.mod ];then go mod init photofs_lib;fi
+	cd lib && go mod tidy
 
 init_client:
 	@echo "[INFO] initializing photoFS client Golang project"
@@ -23,6 +28,10 @@ init_server:
 	cd server && go mod tidy
 
 
+fmt_lib:
+	@echo "[INFO] formating photoFS lib Golang code"
+	cd lib && go fmt
+
 fmt_client:
 	@echo "[INFO] formating photoFS client Golang code"
 	cd client && go fmt
@@ -32,11 +41,11 @@ fmt_server:
 	cd server && go fmt
 
 
-build_client:
+build_client: fmt_lib fmt_client
 	@echo "[INFO] building photoFS client Golang binary"
 	cd client && go build -o ../bin/
 
-build_server:
+build_server: fmt_lib fmt_server
 	@echo "[INFO] building photoFS server Golang binary"
 	cd server && go build -o ../bin/
 
