@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+
+	bolt "go.etcd.io/bbolt"
 
 	photofs "photofs/lib"
 )
@@ -33,6 +36,65 @@ func getTagWidgets(tagNames map[string][]string) (map[string]fyne.CanvasObject, 
 	return tagWidgets, selectedTags, nil
 }
 
+func addTagNameToCheckGroup(tagWidgets map[string]fyne.CanvasObject, tagType string, tagName string) {
+	checkGroup := tagWidgets[tagType].(*widget.CheckGroup)
+
+	oldOptions := checkGroup.Options
+	newOptions := append(checkGroup.Options, tagName)
+
+	if (newOptions == nil) || slices.Equal(oldOptions, newOptions) {
+		log.Fatal("no new tagName could be added to checkGroup.Options in addTagNameToCheckGroup")
+	}
+
+	checkGroup.Options = newOptions
+	checkGroup.Refresh()
+}
+
+func getTagNameEntriesAndButtons(db *bolt.DB, tagNames map[string][]string, tagWidgets map[string]fyne.CanvasObject) (map[string]*widget.Entry, map[string]*widget.Button, error) {
+	tagNameEntries := make(map[string]*widget.Entry)
+	tagNameButtons := make(map[string]*widget.Button)
+
+	for tagType, _ := range tagNames {
+		localTagType := tagType // Create a local copy of tagType
+
+		tagNameEntries[localTagType] = widget.NewEntry()
+		tagNameEntries[localTagType].PlaceHolder = "New Tag..."
+
+		tagNameButtons[localTagType] = widget.NewButton("Add", func() {
+
+			addTagNameToCheckGroup(tagWidgets, localTagType, tagNameEntries[localTagType].Text)
+			tagNames[localTagType] = append(tagNames[localTagType], tagNameEntries[localTagType].Text)
+
+			tagNamesToAdd := map[string]photofs.TagNameList{
+				localTagType: photofs.TagNameList{tagNames[localTagType]},
+			}
+			err := photofs.AddTagNames(db, tagNamesToAdd)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			tagNameEntries[localTagType].Text = ""
+
+		})
+
+		tagNameButtons[localTagType].Disable()
+
+		tagNameEntries[localTagType].OnChanged = func(s string) {
+			tagNameButtons[localTagType].Disable()
+
+			if len(s) >= 3 {
+				tagNameButtons[localTagType].Enable()
+			}
+		}
+	}
+
+	if len(tagNameEntries) == 0 || len(tagNameButtons) == 0 {
+		return nil, nil, fmt.Errorf("failed to build the map of tagNameEntries and tagNameButtons in getTagNameEntriesAndButtons func")
+	}
+
+	return tagNameEntries, tagNameButtons, nil
+}
+
 func main() {
 	args := os.Args
 
@@ -53,11 +115,11 @@ func main() {
 	}
 	defer db.Close()
 
-	// db: add some test tag names
-	err = photofs.AddTestTagNames(db)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// 	// db: add some test tag names
+	// 	err = photofs.AddTestTagNames(db)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
 
 	fileList := widget.NewList(
 		func() int {
@@ -92,21 +154,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	newtagNameTxt := widget.NewEntry()
-	newtagNameTxt.PlaceHolder = "New Tag..."
-
-	addBtn := widget.NewButton("Add", func() {
-		//     tags.Append(newtagNameTxt.Text) // TODO: needs to be changed to the new tagWidgets map
-		newtagNameTxt.Text = ""
-	})
-	addBtn.Disable()
-
-	newtagNameTxt.OnChanged = func(s string) {
-		addBtn.Disable()
-
-		if len(s) >= 3 {
-			addBtn.Enable()
-		}
+	tagNameEntries, tagNameButtons, err := getTagNameEntriesAndButtons(db, tagNames, tagWidgets)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	updateBtn := widget.NewButton("Update Tags", func() {
@@ -143,36 +193,36 @@ func main() {
 							nil, // BOTTOM
 							nil, // Left
 							// RIGHT ↓
-							addBtn,
+							tagNameButtons["What"],
 							// take the rest of the space
-							newtagNameTxt,
+							tagNameEntries["What"],
 						),
 						container.NewBorder(
 							nil, // TOP
 							nil, // BOTTOM
 							nil, // Left
 							// RIGHT ↓
-							addBtn,
+							tagNameButtons["Who"],
 							// take the rest of the space
-							newtagNameTxt,
+							tagNameEntries["Who"],
 						),
 						container.NewBorder(
 							nil, // TOP
 							nil, // BOTTOM
 							nil, // Left
 							// RIGHT ↓
-							addBtn,
+							tagNameButtons["Where"],
 							// take the rest of the space
-							newtagNameTxt,
+							tagNameEntries["Where"],
 						),
 						container.NewBorder(
 							nil, // TOP
 							nil, // BOTTOM
 							nil, // Left
 							// RIGHT ↓
-							addBtn,
+							tagNameButtons["Misc"],
 							// take the rest of the space
-							newtagNameTxt,
+							tagNameEntries["Misc"],
 						),
 					),
 					nil, // BOTTOM
@@ -190,16 +240,13 @@ func main() {
 					container.New(
 						layout.NewGridLayout(4),
 						container.NewScroll(tagWidgets["What"]),
-						// 						tagWidgets["Who"],
-						container.NewScroll(widget.NewLabel("placeholder")), // who
+						container.NewScroll(tagWidgets["Who"]),
 						container.NewScroll(tagWidgets["Where"]),
-						container.NewScroll(widget.NewLabel("placeholder")), // misc
+						container.NewScroll(tagWidgets["Misc"]),
 					),
 					container.NewBorder(
 						// TOP
-						// 						widget.NewLabel("Update Tags"), // TOP
 						updateBtn,
-						// 						nil,
 						nil, // BOTTOM
 						nil, // RIGHT
 						nil, // LEFT

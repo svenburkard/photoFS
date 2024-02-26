@@ -164,7 +164,9 @@ func AddTagNames(db *bolt.DB, tagNames map[string]TagNameList) error {
 func AddTestTagNames(db *bolt.DB) error {
 	tagNamesToAdd := map[string]TagNameList{
 		"What":  TagNameList{[]string{"party/birthday", "cake", "party/christmas", "party/halloween", "party/wedding", "sunrise", "sunset"}},
+		"Who":   TagNameList{[]string{"family", "friends", "coworkers"}},
 		"Where": TagNameList{[]string{"Germany/Frankfurt", "Germany/Berlin", "bar", "club", "restaurant"}},
+		"Misc":  TagNameList{[]string{"misc-example"}},
 	}
 	err := AddTagNames(db, tagNamesToAdd)
 	if err != nil {
