@@ -56,10 +56,16 @@ test_data:
 		&& cat server/tag_map.json  | jq "keys" | grep '^\s*"' | cut -d '"' -f2 | xargs touch
 
 
+# All arguments will be added to the binary, except for the run_client target itself.
+# To be able to process given file names inside the binary, without the need to define any env vars.
 run_client:
 	@echo "[INFO] running photoFS client binary"
-	bin/photofs_client
+	bin/photofs_client $(filter-out $@,$(MAKECMDGOALS))
 
 run_server: test_data
 	@echo "[INFO] running photoFS server binary"
 	bin/photofs_server
+
+# catch-all target, to avoid unknown target warnings during the run_client target, if files were added as parameters.
+%:
+	@:
