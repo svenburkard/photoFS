@@ -3,6 +3,7 @@ package lib
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"slices"
 	"time"
 
@@ -57,7 +58,7 @@ func verifyBucketName(bucketName string) error {
 	return nil
 }
 
-func jsonToMap(jsonStr string) (map[string][]string, error) {
+func convertJsonToMap(jsonStr string) (map[string][]string, error) {
 
 	result := make(map[string][]string)
 	err := json.Unmarshal([]byte(jsonStr), &result)
@@ -86,9 +87,9 @@ func getKVfromDB(db *bolt.DB, bucketName string) (map[string]map[string][]string
 
 		c := bucket.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			jsonMap, err := jsonToMap(string(v))
+			jsonMap, err := convertJsonToMap(string(v))
 			if err != nil {
-				return fmt.Errorf("jsonToMap failed for string %v: %w", string(v), err)
+				return fmt.Errorf("convertJsonToMap failed for string %v: %w", string(v), err)
 			}
 			kvMap[string(k)] = jsonMap
 		}
@@ -176,7 +177,7 @@ func AddTestTagNames(db *bolt.DB) error {
 	return nil
 }
 
-func AddTagsOfFile(db *bolt.DB, srcFile string, tagsOfFile *TagsOfFile) error {
+func AddTagsOfFile(db *bolt.DB, srcFile string, tagsOfFile TagsOfFile) error {
 
 	tagsBytes, err := json.Marshal(tagsOfFile)
 
@@ -189,4 +190,24 @@ func AddTagsOfFile(db *bolt.DB, srcFile string, tagsOfFile *TagsOfFile) error {
 	err = addKVtoDB(db, "tags", srcFile, tagsBytes)
 
 	return err
+}
+
+func ConvertSelectedTagsToTagsOfFile(selectedTags map[string][]string) (TagsOfFile, error) {
+	var tags TagsOfFile
+	val := reflect.ValueOf(&tags).Elem()
+
+	for tagType, tagNames := range selectedTags {
+		fieldVal := val.FieldByName(tagType)
+		if !fieldVal.IsValid() {
+			return TagsOfFile{}, fmt.Errorf("invalid tagType: %v", tagType)
+		}
+
+		if fieldVal.CanSet() {
+			fieldVal.Set(reflect.ValueOf(tagNames))
+		} else {
+			return TagsOfFile{}, fmt.Errorf("failed to set tagType: %v", tagType)
+		}
+	}
+
+	return tags, nil
 }

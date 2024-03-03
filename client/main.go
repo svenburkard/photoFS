@@ -160,10 +160,27 @@ func main() {
 	}
 
 	updateBtn := widget.NewButton("Update Tags", func() {
-		if len(selectedTags) > 0 {
-			fmt.Println("[client] TODO: make DB update of selectedTags: ", selectedTags)
+		if len(files) > 0 {
+			if len(selectedTags) > 0 {
+
+				for _, srcFile := range files {
+					tagsOfFile, err := photofs.ConvertSelectedTagsToTagsOfFile(selectedTags)
+					if err != nil {
+						log.Fatal(err)
+					}
+					err = photofs.AddTagsOfFile(db, srcFile, tagsOfFile)
+					if err == nil {
+						fmt.Printf("[client] succesfully updated tags (%v) of srcFile (%v)", selectedTags, srcFile)
+					} else {
+						log.Fatal("[client] failed to add tags (%v) of file (%v) to db: %w", selectedTags, srcFile, err)
+					}
+				}
+
+			} else {
+				fmt.Println("[client] DB will not be updated, because selectedTags map is empty")
+			}
 		} else {
-			fmt.Println("[client] DB will not be updated, because selectedTags map is empty")
+			fmt.Println("[client] DB will not be updated, because no files have been selected")
 		}
 	})
 
