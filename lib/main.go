@@ -15,10 +15,10 @@ type TagNameList struct {
 }
 
 type TagsOfFile struct {
-	What  []string `json:"what,omitempty"`
-	Where []string `json:"where,omitempty"`
-	Who   []string `json:"who,omitempty"`
-	When  []string `json:"when,omitempty"`
+	What  []string `json:"What,omitempty"`
+	Where []string `json:"Where,omitempty"`
+	Who   []string `json:"Who,omitempty"`
+	When  []string `json:"When,omitempty"`
 }
 
 var mainBucket = "photoFS"
@@ -66,7 +66,7 @@ func convertJsonToMap(jsonStr string) (map[string][]string, error) {
 	return result, err
 }
 
-func getKVfromDB(db *bolt.DB, bucketName string) (map[string]map[string][]string, error) {
+func getAllKVfromDB(db *bolt.DB, bucketName string) (map[string]map[string][]string, error) {
 
 	err := verifyBucketName(bucketName)
 	if err != nil {
@@ -120,7 +120,7 @@ func addKVtoDB(db *bolt.DB, bucketName string, key string, value []byte) error {
 func GetTagNames(db *bolt.DB) (map[string][]string, error) {
 
 	bucketName := "tagNames"
-	kvMap, err := getKVfromDB(db, bucketName)
+	kvMap, err := getAllKVfromDB(db, bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("could not get '%v' kvMap from db: %w", bucketName, err)
 	}
@@ -137,7 +137,7 @@ func GetTagNames(db *bolt.DB) (map[string][]string, error) {
 func GetTags(db *bolt.DB) (map[string]map[string][]string, error) {
 
 	bucketName := "tags"
-	kvMap, err := getKVfromDB(db, bucketName)
+	kvMap, err := getAllKVfromDB(db, bucketName)
 
 	return kvMap, err
 }
@@ -210,4 +210,79 @@ func ConvertSelectedTagsToTagsOfFile(selectedTags map[string][]string) (TagsOfFi
 	}
 
 	return tags, nil
+}
+
+func GetCommonTagsOfFiles(db *bolt.DB, files []string) (map[string][]string, error) {
+
+	bucketName := "tags"
+
+	err := verifyBucketName(bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("bucketName verification failed: %w", err)
+	}
+
+	kvMap := make(map[string][][]string)
+
+	err = db.View(func(tx *bolt.Tx) error {
+
+		fmt.Println("mainBucket: ", mainBucket)
+		fmt.Println("bucketName: ", bucketName)
+		bucket := tx.Bucket([]byte(mainBucket)).Bucket([]byte(bucketName))
+		fmt.Println("bucket: ", bucket)
+		if bucket == nil {
+			return fmt.Errorf("failed to get '%v/%v' bucket", mainBucket, bucketName)
+		}
+
+		for _, file := range files {
+			v := bucket.Get([]byte(file))
+			if v == nil {
+				continue // Skip if no tagValue for file is available
+			}
+
+			jsonMap, err := convertJsonToMap(string(v))
+			if err != nil {
+				return fmt.Errorf("convertJsonToMap failed for string %v: %w", string(v), err)
+			}
+
+			for tagType, tagValues := range jsonMap {
+				kvMap[tagType] = append(kvMap[tagType], tagValues)
+			}
+
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get common tags: %w", err)
+	}
+
+  // Get common tagValues for each tagType of all files
+	commonTags := make(map[string][]string)
+	for tagType, tagLists := range kvMap {
+		commonTags[tagType] = findCommonElementsInLists(tagLists)
+	}
+
+	return commonTags, nil
+}
+
+func findCommonElementsInLists(lists [][]string) []string {
+	common := make([]string, 0)
+	itemCounts := make(map[string]int)
+	listCount := len(lists)
+
+  // Count all items across all lists
+	for _, list := range lists {
+		for _, item := range list {
+			itemCounts[item]++
+		}
+	}
+
+  // Get all items, which appear in all lists
+	for item, count := range itemCounts {
+		if count == listCount {
+			common = append(common, item)
+		}
+	}
+
+	return common
 }

@@ -17,16 +17,29 @@ import (
 	photofs "photofs/lib"
 )
 
-func getTagWidgets(tagNames map[string][]string) (map[string]fyne.CanvasObject, map[string][]string, error) {
+func getTagWidgets(db *bolt.DB, files []string, tagNames map[string][]string) (map[string]fyne.CanvasObject, map[string][]string, error) {
 	tagWidgets := make(map[string]fyne.CanvasObject)
 	selectedTags := make(map[string][]string)
 
+	commonTags, err := photofs.GetCommonTagsOfFiles(db, files)
+	if err != nil {
+		fmt.Printf("GetCommonTagsOfFiles failed: %w\n", err)
+	}
+
 	for tagType, tagNameList := range tagNames {
 		localTagType := tagType // Create a local copy of tagType
-		tagWidgets[localTagType] = widget.NewCheckGroup(tagNameList, func(selected []string) {
+		checkGroup := widget.NewCheckGroup(tagNameList, func(selected []string) {
 			selectedTags[localTagType] = selected
 			fmt.Printf("selectedTags map: %v\n", selectedTags)
 		})
+
+    // Pre-select all common tags of the selected files
+		if len(commonTags[localTagType]) > 0 {
+			checkGroup.Selected = commonTags[localTagType]
+			checkGroup.Refresh()
+		}
+
+		tagWidgets[localTagType] = checkGroup
 	}
 
 	if len(tagWidgets) == 0 {
@@ -149,7 +162,7 @@ func main() {
 	}
 	fmt.Println("[client] tagNames: ", tagNames)
 
-	tagWidgets, selectedTags, err := getTagWidgets(tagNames)
+	tagWidgets, selectedTags, err := getTagWidgets(db, files, tagNames)
 	if err != nil {
 		log.Fatal(err)
 	}
