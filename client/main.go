@@ -33,7 +33,7 @@ func getTagWidgets(db *bolt.DB, files []string, tagNames map[string][]string) (m
 			fmt.Printf("selectedTags map: %v\n", selectedTags)
 		})
 
-    // Pre-select all common tags of the selected files
+		// Pre-select all common tags of the selected files
 		if len(commonTags[localTagType]) > 0 {
 			checkGroup.Selected = commonTags[localTagType]
 			checkGroup.Refresh()

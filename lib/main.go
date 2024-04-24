@@ -213,50 +213,24 @@ func ConvertSelectedTagsToTagsOfFile(selectedTags map[string][]string) (TagsOfFi
 }
 
 func GetCommonTagsOfFiles(db *bolt.DB, files []string) (map[string][]string, error) {
-
-	bucketName := "tags"
-
-	err := verifyBucketName(bucketName)
-	if err != nil {
-		return nil, fmt.Errorf("bucketName verification failed: %w", err)
-	}
-
 	kvMap := make(map[string][][]string)
 
-	err = db.View(func(tx *bolt.Tx) error {
-
-		fmt.Println("mainBucket: ", mainBucket)
-		fmt.Println("bucketName: ", bucketName)
-		bucket := tx.Bucket([]byte(mainBucket)).Bucket([]byte(bucketName))
-		fmt.Println("bucket: ", bucket)
-		if bucket == nil {
-			return fmt.Errorf("failed to get '%v/%v' bucket", mainBucket, bucketName)
+	for _, file := range files {
+		tags, noData, err := fetchTagsForFile(db, file)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch tags for file %s: %w", file, err)
+		}
+		if noData {
+			// Immediately return an empty map since at least one file has no data
+			return make(map[string][]string), nil
 		}
 
-		for _, file := range files {
-			v := bucket.Get([]byte(file))
-			if v == nil {
-				continue // Skip if no tagValue for file is available
-			}
-
-			jsonMap, err := convertJsonToMap(string(v))
-			if err != nil {
-				return fmt.Errorf("convertJsonToMap failed for string %v: %w", string(v), err)
-			}
-
-			for tagType, tagValues := range jsonMap {
-				kvMap[tagType] = append(kvMap[tagType], tagValues)
-			}
-
+		for tagType, tagValues := range tags {
+			kvMap[tagType] = append(kvMap[tagType], tagValues)
 		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get common tags: %w", err)
 	}
 
-  // Get common tagValues for each tagType of all files
+	// Get common tagValues for each tagType of all files
 	commonTags := make(map[string][]string)
 	for tagType, tagLists := range kvMap {
 		commonTags[tagType] = findCommonElementsInLists(tagLists)
@@ -265,19 +239,52 @@ func GetCommonTagsOfFiles(db *bolt.DB, files []string) (map[string][]string, err
 	return commonTags, nil
 }
 
+func fetchTagsForFile(db *bolt.DB, file string) (map[string][]string, bool, error) {
+	bucketName := "tags"
+	var jsonMap map[string][]string
+
+	err := db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(mainBucket)).Bucket([]byte(bucketName))
+		if bucket == nil {
+			return fmt.Errorf("failed to get '%v/%v' bucket", mainBucket, bucketName)
+		}
+
+		v := bucket.Get([]byte(file))
+		if v == nil {
+			// Return nil for a file without any tag data inside the db
+			return nil
+		}
+
+		var err error
+		jsonMap, err = convertJsonToMap(string(v))
+		return err
+	})
+
+	if err != nil {
+		return nil, false, err
+	}
+
+	// Check if jsonMap is still nil, which means no data was found for the file
+	if jsonMap == nil {
+		return nil, true, nil // True for noData indicating no tags were found for this file.
+	}
+
+	return jsonMap, false, nil // False for noData indicating data was successfully found and parsed.
+}
+
 func findCommonElementsInLists(lists [][]string) []string {
 	common := make([]string, 0)
 	itemCounts := make(map[string]int)
 	listCount := len(lists)
 
-  // Count all items across all lists
+	// Count all items across all lists
 	for _, list := range lists {
 		for _, item := range list {
 			itemCounts[item]++
 		}
 	}
 
-  // Get all items, which appear in all lists
+	// Get all items, which appear in all lists
 	for item, count := range itemCounts {
 		if count == listCount {
 			common = append(common, item)
