@@ -27,6 +27,11 @@ init_server:
 	cd server && if [ ! -f go.mod ];then go mod init photofs_server;fi
 	cd server && go mod tidy
 
+init_dbview:
+	@echo "[INFO] initializing photoFS db-view Golang project"
+	cd dbview && if [ ! -f go.mod ];then go mod init photofs_dbview;fi
+	cd dbview && go mod tidy
+
 
 fmt_lib:
 	@echo "[INFO] formating photoFS lib Golang code"
@@ -49,6 +54,10 @@ build_server: fmt_lib fmt_server
 	@echo "[INFO] building photoFS server Golang binary"
 	cd server && go build -o ../bin/
 
+build_dbview:
+	@echo "[INFO] building photoFS dbview Golang binary"
+	cd dbview && go build -o ../bin/
+
 
 test_data:
 	@echo "[INFO] create test data files from server/tag_map.json"
@@ -65,6 +74,10 @@ run_client:
 run_server: test_data
 	@echo "[INFO] running photoFS server binary"
 	bin/photofs_server
+
+run_dbview:
+	@echo "[INFO] running photoFS dbview binary"
+	bin/photofs_dbview
 
 # catch-all target, to avoid unknown target warnings during the run_client target, if files were added as parameters.
 %:
