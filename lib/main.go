@@ -214,6 +214,7 @@ func ConvertSelectedTagsToTagsOfFile(selectedTags map[string][]string) (TagsOfFi
 
 func GetCommonTagsOfFiles(db *bolt.DB, files []string) (map[string][]string, error) {
 	kvMap := make(map[string][][]string)
+	tagPresenceCountMap := make(map[string]int)
 
 	for _, file := range files {
 		tags, noData, err := fetchTagsForFile(db, file)
@@ -227,13 +228,16 @@ func GetCommonTagsOfFiles(db *bolt.DB, files []string) (map[string][]string, err
 
 		for tagType, tagValues := range tags {
 			kvMap[tagType] = append(kvMap[tagType], tagValues)
+			tagPresenceCountMap[tagType]++
 		}
 	}
 
 	// Get common tagValues for each tagType of all files
 	commonTags := make(map[string][]string)
 	for tagType, tagLists := range kvMap {
-		commonTags[tagType] = findCommonElementsInLists(tagLists)
+		if tagPresenceCountMap[tagType] == len(files) {
+			commonTags[tagType] = findCommonElementsInLists(tagLists)
+		}
 	}
 
 	return commonTags, nil
